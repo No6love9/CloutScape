@@ -146,7 +146,7 @@ fi
 # Install Python dependencies
 if [ -f "$INSTALL_DIR/requirements.txt" ]; then
     print_info "Installing Python dependencies..."
-    pip3 install -r "$INSTALL_DIR/requirements.txt" --user -q
+    /home/damien/CloutScape/venv/bin/pip install -r "$INSTALL_DIR/requirements.txt"
     print_success "Python dependencies installed"
 fi
 

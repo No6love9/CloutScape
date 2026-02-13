@@ -20,7 +20,7 @@ echo "Output Directory: $OUTPUT_DIR"
 echo ""
 
 # Check for Java
-if ! command -v javac &> /dev/null; then
+if ! command -v javac -encoding UTF-8 -encoding UTF-8 &> /dev/null; then
     echo "ERROR: Java compiler (javac) not found!"
     echo "Please install Java 11 or higher."
     exit 1
@@ -45,18 +45,20 @@ fi
 echo "Found $(echo "$JAVA_FILES" | wc -l) Java source files"
 
 # Build classpath from lib directory
-CLASSPATH="$BUILD_DIR"
+CLASSPATH="$SERVER_DIR:$SERVER_DIR/lib/*:$SERVER_DIR/lib/netty/*"
 if [ -d "$LIB_DIR" ]; then
     for jar in "$LIB_DIR"/*.jar; do
         if [ -f "$jar" ]; then
-            CLASSPATH="$CLASSPATH:$jar"
+            CLASSPATH="$SERVER_DIR:$SERVER_DIR/lib/*:$SERVER_DIR/lib/netty/*"
         fi
     done
 fi
 
 # Compile Java sources
+cp -r "$SERVER_DIR/lib" "$BUILD_DIR/"
+cp -r "$SERVER_DIR/lib" "$BUILD_DIR/"
 echo "[3/5] Compiling Java sources..."
-javac -d "$BUILD_DIR" -cp "$CLASSPATH" -source 1.8 -target 1.8 $JAVA_FILES
+javac -encoding UTF-8 -encoding UTF-8 -d "$BUILD_DIR" -cp "$CLASSPATH" -source 1.8 -target 1.8 $JAVA_FILES
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Compilation failed!"
