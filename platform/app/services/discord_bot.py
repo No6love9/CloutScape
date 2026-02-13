@@ -8,32 +8,47 @@ from discord import app_commands
 import asyncio
 import requests
 import json
+import logging
+
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Bot configuration
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://web:5000')
 PRICE_ALERT_CHANNEL_ID = int(os.getenv('PRICE_ALERT_CHANNEL_ID', '0'))
 ORDERS_CHANNEL_ID = int(os.getenv('ORDERS_CHANNEL_ID', '0'))
+NOTIFICATION_CHANNEL_ID = int(os.getenv('DISCORD_NOTIFICATION_CHANNEL_ID', '0'))
 
 # Initialize bot
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.presences = True
 
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 @bot.event
 async def on_ready():
     """Bot ready event"""
-    print(f'{bot.user} has connected to Discord!')
+    logger.info(f'Logged in as {bot.user} (ID: {bot.user.id})')
     
     # Sync slash commands
     try:
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
+        logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
+        logger.error(f"Failed to sync commands: {e}")
+    
+    # Send startup notification
+    if NOTIFICATION_CHANNEL_ID:
+        channel = bot.get_channel(NOTIFICATION_CHANNEL_ID)
+        if channel:
+            await channel.send("🚀 **CloutScape Discord Bot is online!**")
     
     # Start background tasks
     check_price_changes.start()
@@ -70,6 +85,27 @@ async def price_command(interaction: discord.Interaction):
         await interaction.response.send_message(f"Error fetching prices: {e}", ephemeral=True)
 
 
+@bot.tree.command(name="reward", description="Claim your purchase rewards")
+async def reward_command(interaction: discord.Interaction):
+    """Claim rewards"""
+    user = interaction.user
+    # Placeholder for actual verification logic
+    reward_code = f"CLOUT-{os.urandom(4).hex().upper()}"
+    
+    await interaction.response.send_message(
+        f"Thank you for your purchase, {user.display_name}! 🎁\n\n"
+        f"Your reward code is: `{reward_code}`\n"
+        "Please use it in-game or on our platform.",
+        ephemeral=True
+    )
+    
+    # Notify admin channel
+    if NOTIFICATION_CHANNEL_ID:
+        channel = bot.get_channel(NOTIFICATION_CHANNEL_ID)
+        if channel:
+            await channel.send(f"🚀 **New Reward Claimed**\nUser: {user.mention} ({user.id})\nCode: `{reward_code}`")
+
+
 @bot.tree.command(name="leaderboard", description="Display top 10 clout points")
 async def leaderboard_command(interaction: discord.Interaction):
     """Display leaderboard"""
@@ -96,46 +132,13 @@ async def leaderboard_command(interaction: discord.Interaction):
         await interaction.response.send_message(f"Error fetching leaderboard: {e}", ephemeral=True)
 
 
-@bot.tree.command(name="stake", description="Log a gambling result")
-@app_commands.describe(
-    amount="Amount won or lost (in GP)",
-    result="Did you win or lose?",
-    game="Type of game"
-)
-@app_commands.choices(result=[
-    app_commands.Choice(name="Win", value="win"),
-    app_commands.Choice(name="Loss", value="loss")
-])
-@app_commands.choices(game=[
-    app_commands.Choice(name="Duel Arena", value="duel"),
-    app_commands.Choice(name="Staking", value="staking"),
-    app_commands.Choice(name="Flower Poker", value="flower")
-])
-async def stake_command(
-    interaction: discord.Interaction,
-    amount: int,
-    result: app_commands.Choice[str],
-    game: app_commands.Choice[str]
-):
-    """Log gambling result"""
-    await interaction.response.send_message(
-        f"Gambling log submitted! **{result.name}** of {amount:,} GP in {game.name}. "
-        f"Awaiting admin approval for clout points.",
-        ephemeral=True
-    )
-    
-    # TODO: Send to API to create gambling log
-
-
-@bot.tree.command(name="referral", description="Get your referral link")
-async def referral_command(interaction: discord.Interaction):
-    """Get referral link"""
-    # TODO: Fetch user's referral code from API
-    await interaction.response.send_message(
-        "Your referral link: https://cloutscape.org/ref/YOUR_CODE\n"
-        "Share it to earn rewards!",
-        ephemeral=True
-    )
+async def send_discord_notification(message: str):
+    """Utility function to send notifications to designated channel"""
+    await bot.wait_until_ready()
+    if NOTIFICATION_CHANNEL_ID:
+        channel = bot.get_channel(NOTIFICATION_CHANNEL_ID)
+        if channel:
+            await channel.send(message)
 
 
 @tasks.loop(minutes=15)
@@ -145,26 +148,15 @@ async def check_price_changes():
         return
     
     try:
-        # Get current price
         response = requests.get(f"{API_BASE_URL}/api/v1/prices/live")
         data = response.json()
-        
         our_price = data.get('our_price', 0)
         
-        # Check if price changed significantly (>2%)
-        # TODO: Store previous price and compare
-        
-        channel = bot.get_channel(PRICE_ALERT_CHANNEL_ID)
-        if channel:
-            embed = discord.Embed(
-                title="📊 Price Update",
-                description=f"New price: **${our_price:.2f}** per 1M GP",
-                color=discord.Color.green()
-            )
-            # await channel.send(embed=embed)
+        # In a real app, compare with previous price stored in DB
+        pass
             
     except Exception as e:
-        print(f"Error checking price changes: {e}")
+        logger.error(f"Error checking price changes: {e}")
 
 
 @tasks.loop(hours=1)
@@ -174,15 +166,15 @@ async def update_member_count():
         for guild in bot.guilds:
             member_count = guild.member_count
             # TODO: Send to API
-            print(f"Guild {guild.name} has {member_count} members")
+            logger.info(f"Guild {guild.name} has {member_count} members")
     except Exception as e:
-        print(f"Error updating member count: {e}")
+        logger.error(f"Error updating member count: {e}")
 
 
 def run_bot():
     """Run the Discord bot"""
     if not DISCORD_BOT_TOKEN:
-        print("DISCORD_BOT_TOKEN not set, skipping bot")
+        logger.warning("DISCORD_BOT_TOKEN not set, skipping bot")
         return
     
     bot.run(DISCORD_BOT_TOKEN)
