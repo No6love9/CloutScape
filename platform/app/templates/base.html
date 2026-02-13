@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CloutScape - Your Degenerate Gambling Paradise{% endblock %}</title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="{% block description %}Buy OSRS gold at the cheapest prices. Join the ultimate degenerate gambling community with live price comparison and guaranteed savings.{% endblock %}">
+    <meta name="keywords" content="OSRS gold, buy OSRS GP, cheap OSRS gold, OSRS gambling, RuneScape gold">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}CloutScape - Cheapest OSRS GP{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Your degenerate gambling paradise - Cheapest OSRS GP, guaranteed.{% endblock %}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/og-image.png') }}">
+    <meta property="og:url" content="{{ request.url }}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'clout-dark': '#0F0F0F',
+                        'clout-gold': '#FFD700',
+                        'clout-cyan': '#00FFFF',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-clout-dark text-white">
+    <!-- Navigation -->
+    <nav class="bg-black/50 backdrop-blur-md fixed w-full z-50 border-b border-clout-gold/20">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="{{ url_for('main.index') }}" class="text-2xl font-bold text-clout-gold">
+                    Clout♧Scape
+                </a>
+                
+                <div class="hidden md:flex space-x-6">
+                    <a href="{{ url_for('main.index') }}" class="hover:text-clout-gold transition">Home</a>
+                    <a href="{{ url_for('main.prices') }}" class="hover:text-clout-gold transition">Prices</a>
+                    <a href="{{ url_for('main.about') }}" class="hover:text-clout-gold transition">About</a>
+                    <a href="{{ url_for('main.contact') }}" class="hover:text-clout-gold transition">Contact</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if session.get('user_id') %}
+                        <div class="flex items-center space-x-2">
+                            <img src="{{ session.get('avatar_url') }}" alt="Avatar" class="w-8 h-8 rounded-full">
+                            <span>{{ session.get('username') }}</span>
+                            <a href="{{ url_for('auth.logout') }}" class="text-red-400 hover:text-red-300">Logout</a>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="bg-clout-gold text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition">
+                            Login with Discord
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-20">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-black/80 border-t border-clout-gold/20 mt-20">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-clout-gold font-bold text-xl mb-4">Clout♧Scape</h3>
+                    <p class="text-gray-400">Your degenerate gambling paradise. Cheapest OSRS GP, guaranteed.</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-clout-gold font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="{{ url_for('main.index') }}" class="hover:text-clout-gold">Home</a></li>
+                        <li><a href="{{ url_for('main.prices') }}" class="hover:text-clout-gold">Prices</a></li>
+                        <li><a href="{{ url_for('main.about') }}" class="hover:text-clout-gold">About</a></li>
+                        <li><a href="{{ url_for('main.contact') }}" class="hover:text-clout-gold">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-clout-gold font-semibold mb-4">Community</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-clout-gold">Discord</a></li>
+                        <li><a href="#" class="hover:text-clout-gold">Telegram</a></li>
+                        <li><a href="#" class="hover:text-clout-gold">Leaderboard</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-clout-gold font-semibold mb-4">Newsletter</h4>
+                    <form class="space-y-2">
+                        <input type="email" placeholder="Your email" class="w-full px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-clout-gold">
+                        <button type="submit" class="w-full bg-clout-gold text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition">
+                            Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 CloutScape. All rights reserved. | Powered by CloutScape Pro</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

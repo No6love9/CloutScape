@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Animated Background -->
+    <div id="particles-container" class="absolute inset-0 z-0"></div>
+    
+    <div class="container mx-auto px-4 z-10 text-center">
+        <h1 class="text-6xl md:text-8xl font-bold mb-6">
+            <span class="text-clout-gold">Your Degenerate</span><br>
+            <span class="text-clout-cyan">Gambling Paradise</span>
+        </h1>
+        
+        <p class="text-2xl md:text-3xl mb-8 text-gray-300">
+            Cheapest OSRS GP, <span class="text-clout-gold">Guaranteed</span>
+        </p>
+        
+        <div class="flex flex-col md:flex-row gap-4 justify-center mb-12">
+            <a href="#calculator" class="bg-clout-gold text-black px-8 py-4 rounded-lg font-bold text-xl hover:bg-yellow-500 transition transform hover:scale-105">
+                Buy GP Now
+            </a>
+            <a href="#" class="bg-clout-cyan text-black px-8 py-4 rounded-lg font-bold text-xl hover:bg-cyan-400 transition transform hover:scale-105">
+                Join Discord
+            </a>
+            <a href="#" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl hover:bg-blue-500 transition transform hover:scale-105">
+                Join Telegram
+            </a>
+        </div>
+        
+        <!-- Live Price Ticker -->
+        <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-6 max-w-2xl mx-auto">
+            <div class="text-sm text-gray-400 mb-2">LIVE PRICE</div>
+            <div class="text-5xl font-bold text-clout-gold mb-2" id="live-price">
+                ${{ prices.our_price|default(0.00) }}
+            </div>
+            <div class="text-xl text-gray-300">per 1M GP</div>
+            <div class="text-clout-cyan text-lg mt-2">
+                Save {{ prices.savings_percent|default(0) }}% vs competitors
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Price Comparison Section -->
+<section class="py-20 bg-gradient-to-b from-clout-dark to-black">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-12">
+            <span class="text-clout-gold">Price Comparison</span>
+        </h2>
+        
+        <!-- Comparison Table -->
+        <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8 mb-8">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-gray-700">
+                        <th class="py-4 px-4 text-clout-gold">Seller</th>
+                        <th class="py-4 px-4 text-clout-gold">Price per 1M GP</th>
+                        <th class="py-4 px-4 text-clout-gold">Difference</th>
+                    </tr>
+                </thead>
+                <tbody id="price-table-body">
+                    {% for competitor, price in prices.competitor_prices.items() %}
+                    <tr class="border-b border-gray-800">
+                        <td class="py-4 px-4">{{ competitor }}</td>
+                        <td class="py-4 px-4">${{ "%.2f"|format(price) }}</td>
+                        <td class="py-4 px-4 text-red-400">+{{ "%.1f"|format(((price - prices.our_price) / prices.our_price * 100)) }}%</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="bg-clout-gold/10">
+                        <td class="py-4 px-4 font-bold text-clout-gold">CloutScape (Us)</td>
+                        <td class="py-4 px-4 font-bold text-clout-gold">${{ "%.2f"|format(prices.our_price) }}</td>
+                        <td class="py-4 px-4 font-bold text-clout-cyan">BEST PRICE</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Price Chart -->
+        <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8">
+            <canvas id="price-chart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- GP Calculator Section -->
+<section id="calculator" class="py-20 bg-black">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-12">
+            <span class="text-clout-gold">Calculate Your Savings</span>
+        </h2>
+        
+        <div class="max-w-3xl mx-auto bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8">
+            <div class="mb-8">
+                <label class="block text-lg mb-4">How much GP do you need?</label>
+                <input type="range" id="gp-slider" min="1" max="1000" value="100" class="w-full">
+                <div class="flex justify-between text-sm text-gray-400 mt-2">
+                    <span>1M</span>
+                    <span>500M</span>
+                    <span>1B</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-clout-dark p-6 rounded-lg">
+                    <div class="text-gray-400 mb-2">Amount</div>
+                    <div class="text-3xl font-bold text-clout-gold" id="gp-amount">100M GP</div>
+                </div>
+                
+                <div class="bg-clout-dark p-6 rounded-lg">
+                    <div class="text-gray-400 mb-2">Your Price</div>
+                    <div class="text-3xl font-bold text-clout-cyan" id="total-price">$0.00</div>
+                </div>
+            </div>
+            
+            <div class="bg-green-900/30 border border-green-500/50 rounded-lg p-6 mb-8">
+                <div class="text-center">
+                    <div class="text-gray-400 mb-2">You Save</div>
+                    <div class="text-4xl font-bold text-green-400" id="savings-amount">$0.00</div>
+                    <div class="text-sm text-gray-400 mt-2">compared to average competitor price</div>
+                </div>
+            </div>
+            
+            <button class="w-full bg-clout-gold text-black px-8 py-4 rounded-lg font-bold text-xl hover:bg-yellow-500 transition transform hover:scale-105">
+                Buy Now
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-20 bg-gradient-to-b from-black to-clout-dark">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-12">
+            <span class="text-clout-gold">How It Works</span>
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8 text-center">
+                <div class="text-6xl font-bold text-clout-gold mb-4">1</div>
+                <h3 class="text-2xl font-bold mb-4">Choose Amount</h3>
+                <p class="text-gray-400">Select how much OSRS GP you want to buy using our calculator</p>
+            </div>
+            
+            <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8 text-center">
+                <div class="text-6xl font-bold text-clout-gold mb-4">2</div>
+                <h3 class="text-2xl font-bold mb-4">Complete Payment</h3>
+                <p class="text-gray-400">Pay securely using your preferred payment method</p>
+            </div>
+            
+            <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8 text-center">
+                <div class="text-6xl font-bold text-clout-gold mb-4">3</div>
+                <h3 class="text-2xl font-bold mb-4">Receive GP</h3>
+                <p class="text-gray-400">Get your gold delivered in-game within minutes</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Community Section -->
+<section class="py-20 bg-clout-dark">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-12">
+            <span class="text-clout-gold">Join the Community</span>
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-4 text-clout-cyan">Discord Members</h3>
+                <div class="text-5xl font-bold text-clout-gold mb-4">5,234</div>
+                <p class="text-gray-400 mb-6">Active degenerates gambling right now</p>
+                <a href="#" class="bg-clout-cyan text-black px-6 py-3 rounded-lg font-bold hover:bg-cyan-400 transition inline-block">
+                    Join Discord
+                </a>
+            </div>
+            
+            <div class="bg-black/60 backdrop-blur-md border border-clout-gold/30 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-4 text-clout-gold">Recent Wins</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span>xXNoobSlayer69Xx</span>
+                        <span class="text-green-400">+500M GP</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span>StakingKing</span>
+                        <span class="text-green-400">+1.2B GP</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span>DiceGod</span>
+                        <span class="text-green-400">+350M GP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Badges Section -->
+<section class="py-20 bg-black">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold mb-12">
+            <span class="text-clout-gold">Trusted by Thousands</span>
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div class="bg-clout-dark p-6 rounded-lg">
+                <div class="text-4xl font-bold text-clout-gold mb-2">10K+</div>
+                <div class="text-gray-400">Orders Completed</div>
+            </div>
+            <div class="bg-clout-dark p-6 rounded-lg">
+                <div class="text-4xl font-bold text-clout-gold mb-2">5K+</div>
+                <div class="text-gray-400">Active Users</div>
+            </div>
+            <div class="bg-clout-dark p-6 rounded-lg">
+                <div class="text-4xl font-bold text-clout-gold mb-2">24/7</div>
+                <div class="text-gray-400">Support</div>
+            </div>
+            <div class="bg-clout-dark p-6 rounded-lg">
+                <div class="text-4xl font-bold text-clout-gold mb-2">100%</div>
+                <div class="text-gray-400">Secure</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/price-updates.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+<script>
+    // Initialize price chart
+    const ctx = document.getElementById('price-chart').getContext('2d');
+    const priceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ prices.competitor_prices.keys()|list|tojson }} + ['CloutScape'],
+            datasets: [{
+                label: 'Price per 1M GP (USD)',
+                data: {{ prices.competitor_prices.values()|list|tojson }} + [{{ prices.our_price }}],
+                backgroundColor: function(context) {
+                    return context.dataIndex === context.dataset.data.length - 1 ? '#FFD700' : '#00FFFF';
+                },
+                borderColor: '#FFD700',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(255, 215, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: '#FFD700'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#FFD700'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

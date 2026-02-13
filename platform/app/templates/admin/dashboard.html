@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CloutScape{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-clout-gold mb-8">Admin Dashboard</h1>
+    
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-6">
+            <div class="text-gray-400 mb-2">Total Orders</div>
+            <div class="text-3xl font-bold text-clout-gold">{{ total_orders }}</div>
+        </div>
+        
+        <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-6">
+            <div class="text-gray-400 mb-2">Pending Orders</div>
+            <div class="text-3xl font-bold text-yellow-500">{{ pending_orders }}</div>
+        </div>
+        
+        <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-6">
+            <div class="text-gray-400 mb-2">Total Users</div>
+            <div class="text-3xl font-bold text-clout-cyan">{{ total_users }}</div>
+        </div>
+        
+        <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-6">
+            <div class="text-gray-400 mb-2">Pending Logs</div>
+            <div class="text-3xl font-bold text-red-400">{{ pending_gambling_logs }}</div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <a href="{{ url_for('admin.orders') }}" class="bg-black/60 border border-clout-gold/30 rounded-xl p-6 hover:bg-black/80 transition">
+            <h3 class="text-xl font-bold text-clout-gold mb-2">📦 Orders</h3>
+            <p class="text-gray-400">Manage customer orders</p>
+        </a>
+        
+        <a href="{{ url_for('admin.users') }}" class="bg-black/60 border border-clout-gold/30 rounded-xl p-6 hover:bg-black/80 transition">
+            <h3 class="text-xl font-bold text-clout-gold mb-2">👥 Users</h3>
+            <p class="text-gray-400">View and manage users</p>
+        </a>
+        
+        <a href="{{ url_for('admin.prices') }}" class="bg-black/60 border border-clout-gold/30 rounded-xl p-6 hover:bg-black/80 transition">
+            <h3 class="text-xl font-bold text-clout-gold mb-2">💰 Prices</h3>
+            <p class="text-gray-400">Monitor and override prices</p>
+        </a>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-clout-gold mb-4">Recent Orders</h2>
+        
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-700">
+                    <th class="py-3 px-4 text-left text-gray-400">Order ID</th>
+                    <th class="py-3 px-4 text-left text-gray-400">Amount</th>
+                    <th class="py-3 px-4 text-left text-gray-400">Price</th>
+                    <th class="py-3 px-4 text-left text-gray-400">Status</th>
+                    <th class="py-3 px-4 text-left text-gray-400">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr class="border-b border-gray-800">
+                    <td class="py-3 px-4 font-mono text-sm">{{ order.id[:8] }}...</td>
+                    <td class="py-3 px-4">{{ "{:,}".format(order.amount_gp) }} GP</td>
+                    <td class="py-3 px-4">${{ "%.2f"|format(order.price_usd) }}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-3 py-1 rounded-full text-sm
+                            {% if order.status == 'completed' %}bg-green-900 text-green-300
+                            {% elif order.status == 'pending' %}bg-yellow-900 text-yellow-300
+                            {% elif order.status == 'processing' %}bg-blue-900 text-blue-300
+                            {% else %}bg-gray-900 text-gray-300{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-400">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

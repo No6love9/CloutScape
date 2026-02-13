@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - CloutScape</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'clout-dark': '#0F0F0F',
+                        'clout-gold': '#FFD700',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-clout-dark text-white min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <div class="bg-black/60 border border-clout-gold/30 rounded-xl p-8">
+            <h1 class="text-3xl font-bold text-clout-gold mb-6 text-center">Admin Login</h1>
+            
+            {% if error %}
+            <div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-4">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('admin.login') }}">
+                <div class="mb-4">
+                    <label class="block text-gray-400 mb-2">Username</label>
+                    <input type="text" name="username" required 
+                           class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-clout-gold">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-400 mb-2">Password</label>
+                    <input type="password" name="password" required 
+                           class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-clout-gold">
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-clout-gold text-black px-6 py-3 rounded-lg font-bold hover:bg-yellow-500 transition">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
